@@ -1,5 +1,5 @@
 #!/bin/bash
-#This script performs various offboarding tasks when user's leave the company.
+#This script performs various offboarding tasks when a user leaves the company.
 username=$1
 gam="$HOME/bin/gam/gam"
 
