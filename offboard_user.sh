@@ -55,6 +55,7 @@ read -r -p "Do you want to transfer Google Drive to the manager? [y/N] " respons
 if [[ $response =~ ^([yY][eE][sS] |[yY][eE][sS])$ ]]
 	then 
 		read -r -p "What is "$username"'s manager's username? " r_manager
+		echo "Creating transfer to $r_manager"
 		$gam create datatransfer $username gdrive $r_manager privacy_level shared,private | tee -a /tmp/$username.log
 	else
 		echo "Not transferring GDrive" | tee -a /tmp/$username.log
