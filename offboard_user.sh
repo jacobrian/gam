@@ -1,5 +1,5 @@
 #!/bin/bash
-#Script to remove user from all of their assigned  google groups
+#This script performs various offboarding tasks when user's leave the company.
 username=$1
 gam="$HOME/bin/gam/gam"
 
