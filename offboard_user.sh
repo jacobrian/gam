@@ -36,7 +36,8 @@ unset IFS
 			$gam update group $group_name remove user $username && echo "Removed $username from $group_name"
 	done | tee -a /tmp/$username.log 
 
-# Forcing change password on next sign-in and then disabling immediately. Speculation that this will sign sign user out within 5 minutes and not allow user to send messages without reauthentication
+# Forcing change password on next sign-in and then disabling immediately. 
+# Speculation that this will sign user out within 5 minutes and not allow user to send messages without reauthentication
 echo "Setting force change password on next logon and then disabling immediately to expire current session"
 $gam update user $username changepassword on
 sleep 2 && echo "Waiting for 2 seconds"
@@ -64,4 +65,3 @@ fi
 # Printing Log location
 echo "Offboard complete for $username."
 echo "Temporary Log located at /tmp/$username.log"
-
