@@ -83,7 +83,7 @@ if [[ $response =~ ^([yY][eE][sS]|[yY][eE]|[yY])+$ ]]
                 $gam update user $username email s_$username | tee -a "/Volumes/GoogleDrive/Team Drives/ITOps Team Drive/Offboarding/google_suite/$username.log"
                 $gam delete alias $username | tee -a "/Volumes/GoogleDrive/Team Drives/ITOps Team Drive/Offboarding/google_suite/$username.log"
                 $gam create group $username | tee -a "/Volumes/GoogleDrive/Team Drives/ITOps Team Drive/Offboarding/google_suite/$username.log"
-								sleep 10
+		sleep 10
                 $gam update group $username add owner user $r_manager | tee -a "/Volumes/GoogleDrive/Team Drives/ITOps Team Drive/Offboarding/google_suite/$username.log"
                 $gam update group $username show_in_group_directory false include_in_global_address_list false allow_web_posting false is_archived false who_can_view_group all_members_can_view | tee -a "/Volumes/GoogleDrive/Team Drives/ITOps Team Drive/Offboarding/google_suite/$username.log"
         else
