@@ -27,16 +27,16 @@ $gam user $username deprovision | tee -a "/Volumes/GoogleDrive/Team Drives/ITOps
 # Removing user from all Groups
 echo "Gathering group information for $username"
 amount_of_groups="$($gam info user $username | grep "Groups: (" | sed 's/[^0-9]//g')"
-IFS=$'\n'	
+IFS=$'\n'
 groups_list=($($gam info user $username | grep -A $amount_of_groups Groups | grep -v Groups | sed 's/^[^<]*<//g' | sed 's/\@.*$//g'))
 unset IFS
 	for group_name in ${groups_list[@]}
 		do
 			$gam update group $group_name remove user $username && echo "Removed $username from $group_name"
-	done | tee -a "/Volumes/GoogleDrive/Team Drives/ITOps Team Drive/Offboarding/google_suite/$username.log" 
+	done | tee -a "/Volumes/GoogleDrive/Team Drives/ITOps Team Drive/Offboarding/google_suite/$username.log"
 
-# Forcing change password on next sign-in and then disabling immediately. 
-# Speculation that this will sign user out within 5 minutes and not allow 
+# Forcing change password on next sign-in and then disabling immediately.
+# Speculation that this will sign user out within 5 minutes and not allow
 # user to send messages without reauthentication
 echo "Setting force change password on next logon and then disabling immediately to expire current session"
 $gam update user $username changepassword on
@@ -61,19 +61,36 @@ fi
 echo "Setting $username to suspended" | tee -a "/Volumes/GoogleDrive/Team Drives/ITOps Team Drive/Offboarding/google_suite/$username.log"
 $gam update user $username suspended on | tee -a "/Volumes/GoogleDrive/Team Drives/ITOps Team Drive/Offboarding/google_suite/$username.log"
 
-# Asks admin if they want to transfer docs to manager, if so, asks for manager's 
+# Asks admin if they want to transfer docs to manager, if so, asks for manager's
 # google username and then initiate a gdrive file transfer
-read -r -p "Do you want to transfer Google Drive to the manager? [Yes/No] " response
+read -r -p "What is "$username"'s manager's username? " r_manager
+read -r -p "Do you want to transfer Google Drive to the manager $r_manager? [Yes/No] " response
 if [[ $response =~ ^([yY][eE][sS]|[yY][eE]|[yY])+$ ]]
-	then 
-		read -r -p "What is "$username"'s manager's username? " r_manager
+	then
 		echo "Creating transfer to $r_manager"
 		$gam create datatransfer $username gdrive $r_manager privacy_level shared,private | tee -a "/Volumes/GoogleDrive/Team Drives/ITOps Team Drive/Offboarding/google_suite/$username.log"
 	else
 		echo "Not transferring GDrive" | tee -a "/Volumes/GoogleDrive/Team Drives/ITOps Team Drive/Offboarding/google_suite/$username.log"
 fi
 
+
+# Asks admin if they want to forward incoming emails to the offboarded user to the manager, if so, asks for manager's google username and then
+# prepend s_ to the primary email address, create a group using primary and make manager its owner
+read -r -p "Do you want to forward incoming email to the manager $r_manager? [Yes/No] " response
+if [[ $response =~ ^([yY][eE][sS]|[yY][eE]|[yY])+$ ]]
+        then
+                echo "Creating forwarding to $r_manager"
+                $gam update user $username email s_$username | tee -a "/Volumes/GoogleDrive/Team Drives/ITOps Team Drive/Offboarding/google_suite/$username.log"
+                $gam delete alias $username | tee -a "/Volumes/GoogleDrive/Team Drives/ITOps Team Drive/Offboarding/google_suite/$username.log"
+                $gam create group $username | tee -a "/Volumes/GoogleDrive/Team Drives/ITOps Team Drive/Offboarding/google_suite/$username.log"
+								sleep 10
+                $gam update group $username add owner user $r_manager | tee -a "/Volumes/GoogleDrive/Team Drives/ITOps Team Drive/Offboarding/google_suite/$username.log"
+                $gam update group $username show_in_group_directory false include_in_global_address_list false allow_web_posting false is_archived false who_can_view_group all_members_can_view | tee -a "/Volumes/GoogleDrive/Team Drives/ITOps Team Drive/Offboarding/google_suite/$username.log"
+        else
+                echo "Not setting up the forwarding" | tee -a "/Volumes/GoogleDrive/Team Drives/ITOps Team Drive/Offboarding/google_suite/$username.log"
+fi
+
+
 # Printing Log location
 echo "Offboard complete for $username."
 echo "Log located at "/Volumes/GoogleDrive/Team Drives/ITOps Team Drive/Offboarding/google_suite/$username.log""
-
