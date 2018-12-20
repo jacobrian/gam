@@ -2,7 +2,7 @@
 username=$1
 
 logloc="ENTER LOG PATH HERE"
-logit="tee -a $logloc"
+logit='tee -a "$logloc"'
 
 echo Offboard executed by $(whoami) on $(date) | $logit
 
