@@ -1,29 +1,32 @@
 #This script performs various offboarding tasks when a user leaves the company.
 username=$1
 
-logloc="ENTER LOG PATH HERE"
-logit='tee -a "$logloc"'
+#Set log location, pipe all actions to log file.
+logloc="/Volumes/GoogleDrive/Team Drives/ITOps Team Drive/Offboarding/google_suite/test_log.log"
+exec 3>&1 4>&2
+trap 'exec 2>&4 1>&3' 0 1 2 3
+exec 1>"$logloc" 2>&1
 
-echo Offboard executed by $(whoami) on $(date) | $logit
+echo Offboard executed by $(whoami) on $(date) 
 
 # Removing all mobile devices connected
-echo "Gathering mobile devices for $username" | $logit
+echo "Gathering mobile devices for $username" 
 IFS=$'\n'
 mobile_devices=($(gam print mobile query $username | grep -v resourceId | awk -F"," '{print $1}'))
 unset IFS
 	for mobileid in ${mobile_devices[@]}
 		do
 			gam update mobile $mobileid action account_wipe && echo "Removing $mobileid from $username"
-	done | $logit
+	done 
 
 # Changing user's password to random
 echo "Changing "$username"'s' password to something random"
-gam update user $username password random | $logit
+gam update user $username password random 
 
 # Removing all App-Specific account passwords, deleting MFA Recovery Codes,
 # deleting all OAuth tokens
 echo "Checking and Removing all of "$username"'s Application Specific Passwords, 2SV Recovery Codes, and all OAuth tokens"
-gam user $username deprovision | $logit
+gam user $username deprovision 
 
 # Removing user from all Groups
 echo "Gathering group information for $username"
@@ -34,7 +37,7 @@ unset IFS
 	for group_name in ${groups_list[@]}
 		do
 			gam update group $group_name remove user $username && echo "Removed $username from $group_name"
-	done | $logit
+	done 
 
 # Forcing change password on next sign-in and then disabling immediately.
 # Speculation that this will sign user out within 5 minutes and not allow
@@ -46,21 +49,21 @@ gam update user $username changepassword off
 
 # Generating new set of MFA recovery codes for the user
 echo "Generating new 2SV Recovery Codes for $username"
-gam user $username update backupcodes | $logit
+gam user $username update backupcodes 
 
 # Removing all of user's calendar events
 read -r -p "Do you want to Wipe "$username"'s calendar? [Yes/No] " wipe_answer
 if [[ $wipe_answer =~ ^([yY][eE][sS]|[yY][eE]|[yY])+$ ]]
 	then
 		echo "Deleting all of "$username"'s calendar events"
-		gam calendar $username wipe | $logit
+		gam calendar $username wipe 
 	else
-		echo "Not wiping calendar" | $logit
+		echo "Not wiping calendar" 
 fi
 
 # Suspending user
-echo "Setting $username to suspended" | $logit
-gam update user $username suspended on | $logit
+echo "Setting $username to suspended" 
+gam update user $username suspended on 
 
 # Asks admin if they want to transfer docs to manager, if so, asks for manager's
 # google username and then initiate a gdrive file transfer
@@ -69,9 +72,9 @@ read -r -p "Do you want to transfer Google Drive to the manager $r_manager? [Yes
 if [[ $response =~ ^([yY][eE][sS]|[yY][eE]|[yY])+$ ]]
 	then
 		echo "Creating transfer to $r_manager"
-		gam create datatransfer $username gdrive $r_manager privacy_level shared,private | $logit
+		gam create datatransfer $username gdrive $r_manager privacy_level shared,private 
 	else
-		echo "Not transferring GDrive" | $logit
+		echo "Not transferring GDrive" 
 fi
 
 
@@ -81,15 +84,15 @@ read -r -p "Do you want to forward incoming email to the manager $r_manager? [Ye
 if [[ $response =~ ^([yY][eE][sS]|[yY][eE]|[yY])+$ ]]
         then
                 echo "Creating forwarding to $r_manager"
-                gam update user $username email s_$username | $logit
-                gam delete alias $username | $logit
+                gam update user $username email s_$username 
+                gam delete alias $username 
 		sleep 10
-                gam create group $username description suspended_user | $logit
+                gam create group $username description suspended_user 
 								sleep 10
-                gam update group $username add owner user $r_manager | $logit
-                gam update group $username show_in_group_directory false include_in_global_address_list false allow_web_posting false is_archived false who_can_view_group all_members_can_view | $logit
+                gam update group $username add owner user $r_manager 
+                gam update group $username show_in_group_directory false include_in_global_address_list false allow_web_posting false is_archived false who_can_view_group all_members_can_view 
         else
-                echo "Not setting up the forwarding" | $logit
+                echo "Not setting up the forwarding" 
 fi
 
 
